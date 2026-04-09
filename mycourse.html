@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Purchased Courses </title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(145deg, #f0f4ff 0%, #e9eff8 100%);
+            min-height: 100vh;
+            color: #1a2c3e;
+        }
+        .navbar {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo h2 {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255,255,255,0.6);
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+        }
+        .logout-btn {
+            background: #ef4444;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .logout-btn:hover { background: #dc2626; transform: scale(0.97); }
+        .container {
+            max-width: 1300px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(120deg, #1e293b, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .subhead {
+            color: #4b5563;
+            margin-bottom: 2.5rem;
+            border-left: 4px solid #3b82f6;
+            padding-left: 1rem;
+        }
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+        .course-card {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        .course-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 30px 45px -15px rgba(59,130,246,0.3);
+        }
+        .card-img {
+            height: 180px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            color: white;
+        }
+        .card-content { padding: 1.5rem; }
+        .course-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+        .course-desc {
+            color: #475569;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+        .course-meta {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding-top: 1rem;
+            font-size: 0.85rem;
+            color: #3b82f6;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            background: rgba(255,255,255,0.6);
+            border-radius: 48px;
+        }
+        .loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60vh;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #e2e8f0;
+            border-top: 5px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 700px) {
+            .navbar { flex-direction: column; gap: 12px; }
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <div class="logo"><h2><i class="fas fa-graduation-cap"></i> Sell Edge</h2></div>
+    <div class="user-info">
+        <span class="user-email" id="userEmailDisplay">Loading...</span><a href="main.html">
+        <button class="logout-btn" id="logoutBtn"> Back-Home</button></a>
+    </div>
+</div>
+<div class="container">
+    <div class="page-title">My Learning Vault</div>
+    <div class="subhead">Only courses you've purchased are shown here.</div>
+    <div id="coursesContainer" class="courses-grid">
+        <div class="loader"><div class="spinner"></div></div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyBYe05TmBzh1-f3arisvhpSk5fG9xY8_4A",
+  authDomain: "velvettrim-6da3a.firebaseapp.com",
+  projectId: "velvettrim-6da3a",
+    storageBucket: "velvettrim-6da3a.appspot.com",
+  messagingSenderId: "357069133185",
+  appId: "1:357069133185:web:ed0068ef6454cc43744480",
+};
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const coursesContainer = document.getElementById('coursesContainer');
+    const userEmailSpan = document.getElementById('userEmailDisplay');
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            window.location.href = 'index.html';
+            return;
+        }
+        userEmailSpan.textContent = user.email;
+        const userEmailLower = user.email.toLowerCase();
+
+        try {
+            // 1️⃣ Query payments for this user (completed purchases)
+            const paymentsQuery = query(
+                collection(db, 'payments'),
+                where('studentEmail', '==', userEmailLower),
+                where('status', '==', 'Completed')
+            );
+            const paymentSnap = await getDocs(paymentsQuery);
+
+            if (paymentSnap.empty) {
+                coursesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h3>No purchased courses yet</h3>
+                        <p>Browse our catalog and buy a course to get started.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 2️⃣ Get unique course IDs from payments
+            const purchasedCourseIds = [...new Set(paymentSnap.docs.map(doc => doc.data().courseId))];
+
+            // 3️⃣ Fetch course details for each purchased ID
+            const coursePromises = purchasedCourseIds.map(cid => getDoc(doc(db, 'courses', cid)));
+            const courseDocs = await Promise.all(coursePromises);
+            const purchasedCourses = courseDocs.filter(d => d.exists()).map(d => ({ id: d.id, ...d.data() }));
+
+            if (purchasedCourses.length === 0) {
+                coursesContainer.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Course data missing</h3><p>Please contact support.</p></div>`;
+                return;
+            }
+
+            // 4️⃣ Render courses
+            const html = purchasedCourses.map(course => `
+                <div class="course-card" data-courseid="${course.id}" data-studentemail="${user.email}">
+                    <div class="card-img"><i class="fas fa-chalkboard-user"></i></div>
+                    <div class="card-content">
+                        <div class="course-title">${escapeHtml(course.title)}</div>
+                        <div class="course-desc">${escapeHtml((course.description || '').substring(0, 100))}${course.description?.length > 100 ? '...' : ''}</div>
+                        <div class="course-meta">
+                            <span><i class="fas fa-video"></i> ${course.content?.length || 0} lessons</span>
+                            <span><i class="fas fa-clock"></i> ${escapeHtml(course.duration) || 'Self-paced'}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            coursesContainer.innerHTML = html;
+
+            // Attach click listeners
+            document.querySelectorAll('.course-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const courseId = card.dataset.courseid;
+                    const studentEmail = card.dataset.studentemail;
+                    window.location.href = `course.html?courseId=${encodeURIComponent(courseId)}&studentEmail=${encodeURIComponent(studentEmail)}`;
+                });
+            });
+        } catch (err) {
+            console.error(err);
+            coursesContainer.innerHTML = `<div class="empty-state"><i class="fas fa-bug"></i><h3>Error</h3><p>${escapeHtml(err.message)}</p></div>`;
+        }
+    });
+
+
+</script>
+</body>
+</html>
