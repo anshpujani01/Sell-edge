@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>TradeVault · Watch Demo</title>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        /* RESET & VARIABLES — mobile first, clean */
+        :root {
+            --gold:       #c9a84c;
+            --gold-dim:   rgba(201,168,76,0.15);
+            --gold-line:  rgba(201,168,76,0.2);
+            --bg:         #080810;
+            --surface:    #0f0f1a;
+            --surface2:   #161624;
+            --text:       #f0f0f8;
+            --muted:      #7a7a92;
+            --radius:     16px;
+            --nav-height: 64px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* ══ FIXED NAVBAR — full width, mobile friendly ══ */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            height: var(--nav-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5%;
+            background: rgba(8, 8, 16, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--gold-line);
+            width: 100%;
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--gold);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .nav-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 400;
+            transition: color 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover {
+            color: var(--text);
+        }
+
+        .nav-enroll {
+            background: var(--gold);
+            color: #080810;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            border-radius: 40px;
+            text-decoration: none;
+            transition: opacity 0.2s, transform 0.15s;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(201,168,76,0.15);
+        }
+
+        .nav-enroll:hover {
+            opacity: 0.85;
+            transform: translateY(-1px);
+        }
+
+        /* ══ HERO — padding for fixed nav ══ */
+        .hero {
+            padding-top: calc(var(--nav-height) + 2.5rem);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--gold-line);
+            color: var(--gold);
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            padding: 0.4rem 1.2rem;
+            border-radius: 100px;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: rise 0.7s 0.1s ease forwards;
+        }
+
+        .pulse {
+            width: 7px;
+            height: 7px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2.8rem, 10vw, 5.5rem);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: -1.5px;
+            margin-bottom: 0.75rem;
+            opacity: 0;
+            animation: rise 0.7s 0.2s ease forwards;
+        }
+
+        h1 span {
+            color: var(--gold);
+        }
+
+        .hero-sub {
+            color: var(--muted);
+            font-size: 1.1rem;
+            font-weight: 300;
+            margin-bottom: 2.5rem;
+            opacity: 0;
+            animation: rise 0.7s 0.3s ease forwards;
+        }
+
+        /* ══ VIDEO — LARGE, FULL WIDTH, MAX 1400px ══ */
+        .video-stage {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            opacity: 0;
+            animation: rise 0.9s 0.45s ease forwards;
+            position: relative;
+        }
+
+        .video-stage::before {
+            content: '';
+            position: absolute;
+            inset: -50px;
+            background: radial-gradient(ellipse 70% 50% at 50% 55%, rgba(201,168,76,0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .video-border {
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(201,168,76,0.35) 0%, rgba(201,168,76,0.02) 50%, rgba(201,168,76,0.2) 100%);
+            padding: 1.5px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(201,168,76,0.05);
+        }
+
+        .video-chrome {
+            background: #101018;
+            border-radius: 23px 23px 0 0;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 0 1.2rem;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot-r { background: #ff5f57; }
+        .dot-y { background: #febc2e; }
+        .dot-g { background: #28c840; }
+
+        .url-bar {
+            margin-left: 10px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 6px;
+            height: 24px;
+            width: 200px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 6px;
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        .url-bar i {
+            font-size: 10px;
+            color: #28c840;
+        }
+
+        .video-body {
+            border-radius: 0 0 23px 23px;
+            overflow: hidden;
+            background: #0b0b12;
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            position: relative;
+        }
+
+        .video-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        /* loading / fallback state */
+        .video-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f0f18;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* ══ STATS — responsive grid ══ */
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 1400px;
+            margin: 3.5rem auto 0;
+            border-top: 1px solid var(--gold-line);
+            border-bottom: 1px solid var(--gold-line);
+            background: var(--surface);
+            opacity: 0;
+            animation: rise 0.7s 0.7s ease forwards;
+        }
+
+        .stat {
+            flex: 1 1 140px;
+            text-align: center;
+            padding: 1.8rem 0.8rem;
+            border-right: 1px solid var(--gold-line);
+            transition: background 0.2s;
+        }
+
+        .stat:last-child {
+            border-right: none;
+        }
+
+        .stat:hover {
+            background: var(--surface2);
+        }
+
+        .stat-n {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            display: block;
+            line-height: 1;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-l {
+            font-size: 0.7rem;
+            color: var(--muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* ══ LEARN SECTION ══ */
+        .learn {
+            max-width: 1300px;
+            margin: 5rem auto 0;
+            padding: 0 1.5rem;
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.7s, transform 0.7s;
+        }
+
+        .learn.visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        .eyebrow {
+            font-size: 0.75rem;
+            color: var(--gold);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .section-h {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2.4rem, 6vw, 3.8rem);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.5px;
+            margin-bottom: 2.5rem;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1px;
+            background: var(--gold-line);
+            border: 1px solid var(--gold-line);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .card {
+            background: var(--surface);
+            padding: 2.2rem 1.8rem;
+            transition: background 0.2s;
+        }
+
+        .card:hover {
+            background: var(--surface2);
+        }
+
+        .card-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 3.2rem;
+            font-weight: 700;
+            -webkit-text-stroke: 1px rgba(201,168,76,0.35);
+            color: transparent;
+            line-height: 1;
+            margin-bottom: 0.8rem;
+        }
+
+        .card h4 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        /* ══ CTA ══ */
+        .cta-wrap {
+            max-width: 1300px;
+            margin: 4.5rem auto 5rem;
+            padding: 0 1.5rem;
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.7s, transform 0.7s;
+        }
+
+        .cta-wrap.visible {
+            opacity: 1;
+            transform: none;
+        }
+
+        .cta-box {
+            border: 1px solid var(--gold-line);
+            border-radius: 28px;
+            padding: 3.5rem 2rem;
+            text-align: center;
+            background: var(--surface);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(201,168,76,0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cta-box h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2.4rem, 6vw, 3.8rem);
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+            margin-bottom: 1rem;
+        }
+
+        .cta-box p {
+            color: var(--muted);
+            font-size: 1.1rem;
+            font-weight: 300;
+            margin-bottom: 2.2rem;
+        }
+
+        .cta-btns {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-g {
+            background: var(--gold);
+            color: #080810;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.9rem 2.5rem;
+            border-radius: 60px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: opacity 0.2s, transform 0.15s;
+            box-shadow: 0 8px 20px rgba(201,168,76,0.15);
+        }
+
+        .btn-g:hover {
+            opacity: 0.85;
+            transform: translateY(-2px);
+        }
+
+        .btn-o {
+            background: transparent;
+            color: var(--gold);
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 0.9rem 2.5rem;
+            border-radius: 60px;
+            text-decoration: none;
+            border: 1px solid var(--gold-line);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: border-color 0.2s, transform 0.15s;
+        }
+
+        .btn-o:hover {
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+
+        /* ══ FOOTER ══ */
+        footer {
+            border-top: 1px solid var(--gold-line);
+            padding: 1.5rem 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        footer p {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 300;
+        }
+
+        footer a {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        footer a:hover {
+            color: var(--gold);
+        }
+
+        /* ══ ANIMATIONS ══ */
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes blink {
+            0%,100%{opacity:1}
+            50%{opacity:0.3}
+        }
+
+        /* ══ MOBILE FINE TUNING ══ */
+        @media (max-width: 600px) {
+            :root {
+                --nav-height: 60px;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .nav-link {
+                display: none;  /* hide extra links on small screens — keep enroll */
+            }
+
+            .nav-right {
+                gap: 0.8rem;
+            }
+
+            .nav-enroll {
+                padding: 0.5rem 1.2rem;
+                font-size: 0.8rem;
+            }
+
+            .hero {
+                padding-top: calc(var(--nav-height) + 2rem);
+            }
+
+            .video-chrome {
+                height: 34px;
+                padding: 0 0.8rem;
+            }
+
+            .url-bar {
+                width: 140px;
+            }
+
+            .stat {
+                flex: 1 1 45%;
+                border-bottom: 1px solid var(--gold-line);
+            }
+
+            .stat:nth-child(3) {
+                border-right: none;
+            }
+
+            .stat:last-child {
+                border-bottom: none;
+            }
+
+            .cta-box {
+                padding: 2.5rem 1.2rem;
+            }
+
+            .btn-g, .btn-o {
+                padding: 0.8rem 1.8rem;
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* tiny screens */
+        @media (max-width: 380px) {
+            .hero-sub {
+                font-size: 1rem;
+            }
+            .stat-n {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- FIXED NAVBAR -->
+<nav>
+    <a href="index.html" class="logo">Cell Edge</a>
+    <div class="nav-right">
+        <a href="index.html" class="nav-link">← Home</a>
+        <a href="index.html#courses" class="nav-link">Courses</a>
+        <a href="index.html#courses" class="nav-enroll">Enroll Now</a>
+    </div>
+</nav>
+
+<!-- HERO + LARGE VIDEO -->
+<section class="hero">
+    <div class="hero-tag">
+        <div class="pulse"></div> Free Preview
+    </div>
+    <h1>Watch Before You <span>Invest</span></h1>
+    <p class="hero-sub">A free look inside the course — no sign-up required.</p>
+
+    <!-- VIDEO — DYNAMIC FROM FIREBASE -->
+    <div class="video-stage">
+        <div class="video-border">
+            <div class="video-chrome">
+                <div class="dot dot-r"></div>
+                <div class="dot dot-y"></div>
+                <div class="dot dot-g"></div>
+                <div class="url-bar"><i class="fas fa-lock"></i> Cellegde.in/demo</div>
+            </div>
+            <div class="video-body" id="videoContainer">
+                <!-- iframe will be injected here by Firebase loader -->
+                <div class="video-placeholder" id="videoPlaceholder">
+                    <i class="fas fa-spinner fa-pulse" style="margin-right: 8px;"></i> Loading demo video...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+        <div class="stat"><span class="stat-n">10K+</span><span class="stat-l">Students</span></div>
+        <div class="stat"><span class="stat-n">50+</span><span class="stat-l">Lessons</span></div>
+        <div class="stat"><span class="stat-n">4.9★</span><span class="stat-l">Rating</span></div>
+        <div class="stat"><span class="stat-n">30D</span><span class="stat-l">Money Back</span></div>
+    </div>
+</section>
+
+<!-- WHAT YOU'LL LEARN -->
+<section class="learn" id="learn">
+    <div class="eyebrow">What's inside</div>
+    <h2 class="section-h">Six things you'll<br>master in this course</h2>
+    <div class="cards">
+        <div class="card"><div class="card-num">01</div><h4>Technical Analysis</h4><p>Charts, patterns, and indicators — read the market before it moves.</p></div>
+        <div class="card"><div class="card-num">02</div><h4>Risk Management</h4><p>Position sizing and stop-loss strategies that protect your capital.</p></div>
+        <div class="card"><div class="card-num">03</div><h4>Trading Psychology</h4><p>Control emotions. The mental edge most traders never develop.</p></div>
+        <div class="card"><div class="card-num">04</div><h4>Options & Futures</h4><p>Use derivatives to hedge and generate consistent returns.</p></div>
+        <div class="card"><div class="card-num">05</div><h4>Live Walkthroughs</h4><p>Real trades, real losses — unfiltered market experience.</p></div>
+        <div class="card"><div class="card-num">06</div><h4>Community Access</h4><p>Private Discord, weekly Q&As, 10,000+ active traders.</p></div>
+    </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-wrap" id="cta">
+    <div class="cta-box">
+        <h2>Ready to trade<br>with confidence?</h2>
+        <p>Limited seats at current pricing.</p>
+        <div class="cta-btns">
+            <a href="index.html#courses" class="btn-g"><i class="fas fa-graduation-cap"></i> Enroll Now</a>
+            <a href="index.html#courses" class="btn-o">View Courses</a>
+        </div>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <p>© 2024 Cell Edge · Educational content only</p>
+    <a href="index.html">Back to Home →</a>
+</footer>
+
+<script>
+    (function() {
+        // ---------- FIREBASE CONFIGURATION ----------
+        // ⚠️ REPLACE WITH YOUR OWN FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyBYe05TmBzh1-f3arisvhpSk5fG9xY8_4A",
+  authDomain: "velvettrim-6da3a.firebaseapp.com",
+  projectId: "velvettrim-6da3a",
+    storageBucket: "velvettrim-6da3a.appspot.com",
+  messagingSenderId: "357069133185",
+  appId: "1:357069133185:web:ed0068ef6454cc43744480",
+};
+        
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+
+        // ---------- DEMO VIDEO LOADER (FROM FIRESTORE) ----------
+        const videoContainer = document.getElementById('videoContainer');
+        const placeholder = document.getElementById('videoPlaceholder');
+
+        // Default fallback Loom embed (in case Firestore has no URL)
+        const DEFAULT_EMBED = 'https://www.loom.com/embed/4de5e6c28d3342088a74a8071033ad21?hide_owner=true&hide_share=true';
+
+        async function loadDemoVideo() {
+            try {
+                const docRef = db.collection('settings').doc('site');
+                const doc = await docRef.get();
+                
+                let embedUrl = DEFAULT_EMBED;  // fallback
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Prefer the stored embed URL, otherwise convert from share link
+                    if (data.demoEmbedUrl) {
+                        embedUrl = data.demoEmbedUrl;
+                    } else if (data.demoLoomUrl) {
+                        embedUrl = data.demoLoomUrl
+                            .replace('loom.com/share/', 'loom.com/embed/')
+                            .replace('loom.com/v/', 'loom.com/embed/')
+                            .split('?')[0];
+                    }
+                }
+                
+                // Build iframe
+                const iframe = document.createElement('iframe');
+                iframe.src = embedUrl;
+                iframe.allowFullscreen = true;
+                iframe.setAttribute('webkitallowfullscreen', '');
+                iframe.setAttribute('mozallowfullscreen', '');
+                iframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media');
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.style.display = 'block';
+                
+                // Remove placeholder and inject iframe
+                if (placeholder) placeholder.remove();
+                videoContainer.innerHTML = '';  // clear any leftover
+                videoContainer.appendChild(iframe);
+                
+            } catch (error) {
+                console.warn('Firebase load error, using default video:', error);
+                // Show default video if Firebase fails
+                if (placeholder) placeholder.remove();
+                videoContainer.innerHTML = `<iframe src="${DEFAULT_EMBED}" allowfullscreen webkitallowfullscreen mozallowfullscreen allow="autoplay; fullscreen; encrypted-media" style="width:100%;height:100%;border:none;display:block;"></iframe>`;
+            }
+        }
+
+        // ---------- SCROLL REVEAL (lightweight) ----------
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.learn, .cta-wrap').forEach(el => observer.observe(el));
+
+        // ---------- START: LOAD VIDEO FROM FIREBASE ----------
+        loadDemoVideo();
+
+        // Optional: Admin helper (if you want to expose a simple prompt for demo,
+        // but the real admin uses the functions you provided elsewhere)
+        // This is just a convenience; not needed for the demo page.
+        window.debugSetDemoUrl = async function(url) {
+            if (!url) return;
+            const embed = url.replace('loom.com/share/', 'loom.com/embed/').replace('loom.com/v/', 'loom.com/embed/').split('?')[0];
+            try {
+                await db.collection('settings').doc('site').set({
+                    demoLoomUrl: url,
+                    demoEmbedUrl: embed,
+                    updatedAt: new Date()
+                }, { merge: true });
+                console.log('✅ Demo URL updated. Reload page to see change.');
+                loadDemoVideo(); // reload immediately
+            } catch(e) {
+                console.error(e);
+            }
+        };
+    })();
+</script>
+
+<!-- 
+    INTEGRATION NOTES:
+    - Replace firebaseConfig with your own project details.
+    - The page reads `demoEmbedUrl` from Firestore (settings/site).
+    - If no Firestore document exists, it falls back to a default Loom video.
+    - Admin panel can use the provided functions (saveDemoVideo etc.) to update.
+    - Video container is large, responsive, and mobile-optimized.
+    - Navbar width fixed; body overflow-x hidden; stats wrap nicely.
+-->
+</body>
+</html>

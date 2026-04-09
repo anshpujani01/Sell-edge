@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeVault - My Course</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f4f6fb;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* ---- TOP NAV ---- */
+        .navbar {
+            background: #1a1a2e;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .navbar-brand { color: #fff; font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+        .navbar-brand span { color: #625df5; }
+        .navbar-user { color: #aaa; font-size: 14px; }
+
+        /* ---- PAYMENT SUCCESS BANNER ---- */
+        #paymentBanner {
+            display: none;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        #paymentBanner i { margin-right: 8px; }
+
+        /* ---- ACCESS DENIED ---- */
+        #accessDenied {
+            display: none;
+            max-width: 480px;
+            margin: 80px auto;
+            text-align: center;
+            background: white;
+            border-radius: 16px;
+            padding: 48px 32px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+        #accessDenied i { font-size: 48px; color: #e74c3c; margin-bottom: 16px; }
+        #accessDenied h2 { font-size: 22px; margin-bottom: 10px; }
+        #accessDenied p { color: #666; margin-bottom: 24px; }
+        #accessDenied .btn-buy {
+            display: inline-block;
+            background: #625df5;
+            color: white;
+            padding: 12px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        /* ---- LOADING ---- */
+        #loadingState {
+            text-align: center;
+            padding: 80px 20px;
+            color: #888;
+        }
+        #loadingState i { font-size: 36px; margin-bottom: 12px; color: #625df5; }
+
+        /* ---- COURSE CONTENT ---- */
+        #courseContent { display: none; max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+
+        .course-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .course-icon {
+            width: 72px; height: 72px;
+            background: linear-gradient(135deg, #625df5, #a78bfa);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .course-icon i { color: white; font-size: 30px; }
+        .course-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+        .course-header p { color: #666; font-size: 14px; }
+        .course-meta { display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
+        .course-meta span { font-size: 13px; color: #888; }
+        .course-meta span i { color: #625df5; margin-right: 4px; }
+
+        /* ---- LESSONS LIST ---- */
+        .lessons-section h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1a1a2e;
+        }
+
+        .lesson-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            text-align: left;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+        .lesson-btn:hover {
+            border-color: #625df5;
+            box-shadow: 0 4px 16px rgba(98,93,245,0.15);
+            transform: translateY(-1px);
+        }
+        .lesson-btn:hover .lesson-arrow { opacity: 1; transform: translateX(0); }
+
+        .lesson-num {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, #625df5, #a78bfa);
+            color: white;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .lesson-info { flex: 1; }
+        .lesson-title { font-weight: 600; font-size: 15px; margin-bottom: 3px; }
+        .lesson-desc { font-size: 13px; color: #888; }
+        .lesson-duration { font-size: 12px; color: #aaa; margin-top: 2px; }
+        .lesson-duration i { margin-right: 3px; }
+
+        .lesson-loom-badge {
+            display: flex; align-items: center; gap: 6px;
+            background: #f0eeff;
+            color: #625df5;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+
+        .lesson-arrow {
+            color: #625df5;
+            opacity: 0;
+            transform: translateX(-4px);
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+
+        /* ---- EMPTY ---- */
+        .no-lessons {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            color: #aaa;
+        }
+        .no-lessons i { font-size: 40px; margin-bottom: 12px; }
+
+        @media (max-width: 600px) {
+            .course-header { flex-direction: column; text-align: center; }
+            .course-meta { justify-content: center; }
+            .lesson-loom-badge { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="navbar-brand">Trade<span>Vault</span></div>
+        <div class="navbar-user" id="navUser"></div>
+    </nav>
+
+    <!-- Payment success banner (shown when redirected from Razorpay) -->
+    <div id="paymentBanner">
+        <i class="fas fa-check-circle"></i>
+        Payment successful! Welcome to your course. Happy learning! 🎉
+    </div>
+
+    <!-- Access denied block -->
+    <div id="accessDenied">
+        <i class="fas fa-lock"></i>
+        <h2>Access Denied</h2>
+        <p>You haven't purchased this course yet. Complete your payment to unlock all lessons.</p>
+        <a href="index.html" class="btn-buy">Buy This Course</a>
+    </div>
+
+    <!-- Loading spinner -->
+    <div id="loadingState">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading your course...</p>
+    </div>
+
+    <!-- Course content (shown after access verified) -->
+    <div id="courseContent">
+        <div class="course-header">
+            <div class="course-icon"><i class="fas fa-chart-line"></i></div>
+            <div>
+                <h1 id="courseTitle">Loading...</h1>
+                <p id="courseDescription"></p>
+                <div class="course-meta">
+                    <span><i class="fas fa-layer-group"></i> <span id="courseLevel"></span></span>
+                    <span><i class="fas fa-clock"></i> <span id="courseDurationMeta"></span></span>
+                    <span><i class="fas fa-play-circle"></i> <span id="lessonCount"></span> lessons</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lessons-section">
+            <h2><i class="fas fa-list" style="color:#625df5; margin-right:8px;"></i>Course Lessons</h2>
+            <div id="lessonsContainer"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+    // ==================== FIREBASE CONFIG ====================
+    const firebaseConfig = {
+        apiKey: "AIzaSyBYe05TmBzh1-f3arisvhpSk5fG9xY8_4A",
+        authDomain: "velvettrim-6da3a.firebaseapp.com",
+        projectId: "velvettrim-6da3a",
+        storageBucket: "velvettrim-6da3a.appspot.com",
+        messagingSenderId: "357069133185",
+        appId: "1:357069133185:web:ed0068ef6454cc43744480"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ==================== READ URL PARAMS ====================
+    // Usage: course.html?courseId=COURSE_ID&studentEmail=EMAIL&payment=success
+    // Razorpay success handler should redirect here with these params.
+    const params = new URLSearchParams(window.location.search);
+    const courseId    = params.get('courseId');
+    const studentEmail = params.get('studentEmail');
+    const paymentSuccess = params.get('payment') === 'success';
+
+    // ==================== MAIN ====================
+    window.addEventListener('DOMContentLoaded', async () => {
+        if (!courseId || !studentEmail) {
+            showAccessDenied();
+            return;
+        }
+
+        if (paymentSuccess) {
+            document.getElementById('paymentBanner').style.display = 'block';
+        }
+
+        document.getElementById('navUser').textContent = studentEmail;
+
+        try {
+            // 1. Verify student has paid for this course
+            const hasAccess = await verifyAccess(studentEmail, courseId);
+
+            if (!hasAccess) {
+                showAccessDenied();
+                return;
+            }
+
+            // 2. Load and show the course
+            await loadCourse(courseId);
+
+        } catch (err) {
+            console.error('Error:', err);
+            showAccessDenied();
+        }
+    });
+
+    // ==================== VERIFY ACCESS ====================
+    // Checks Firestore: payments collection for a Completed payment
+    // matching this student + course
+    async function verifyAccess(email, cId) {
+        const snap = await db.collection('payments')
+            .where('studentEmail', '==', email)
+            .where('courseId', '==', cId)
+            .where('status', '==', 'Completed')
+            .limit(1)
+            .get();
+
+        return !snap.empty;
+    }
+
+    // ==================== LOAD COURSE ====================
+    async function loadCourse(cId) {
+        const doc = await db.collection('courses').doc(cId).get();
+
+        if (!doc.exists) {
+            showAccessDenied();
+            return;
+        }
+
+        const course = doc.data();
+        const lessons = course.content || [];
+
+        // Populate header
+        document.getElementById('courseTitle').textContent       = course.title || 'Course';
+        document.getElementById('courseDescription').textContent = course.description || '';
+        document.getElementById('courseLevel').textContent       = course.level || '';
+        document.getElementById('courseDurationMeta').textContent= course.duration || '';
+        document.getElementById('lessonCount').textContent       = lessons.length;
+
+        // Sort lessons by lessonNumber
+        lessons.sort((a, b) => (a.lessonNumber || 0) - (b.lessonNumber || 0));
+
+        // Build lesson buttons
+        const container = document.getElementById('lessonsContainer');
+
+        if (lessons.length === 0) {
+            container.innerHTML = `
+                <div class="no-lessons">
+                    <i class="fas fa-video-slash"></i>
+                    <p>No lessons have been added to this course yet.<br>Check back soon!</p>
+                </div>`;
+        } else {
+            container.innerHTML = '';
+            lessons.forEach((lesson) => {
+                const a = document.createElement('a');
+                a.className = 'lesson-btn';
+                a.href = lesson.loomUrl || '#';
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+
+                a.innerHTML = `
+                    <div class="lesson-num">${lesson.lessonNumber}</div>
+                    <div class="lesson-info">
+                        <div class="lesson-title">${lesson.title}</div>
+                        ${lesson.description ? `<div class="lesson-desc">${lesson.description}</div>` : ''}
+                        ${lesson.duration ? `<div class="lesson-duration"><i class="fas fa-clock"></i>${lesson.duration}</div>` : ''}
+                    </div>
+                    <div class="lesson-loom-badge"><i class="fas fa-video"></i> Watch</div>
+                    <i class="fas fa-arrow-right lesson-arrow"></i>
+                    `;
+
+                // If no loom URL, show a coming soon state
+                if (!lesson.loomUrl) {
+                    a.href = '#';
+                    a.style.opacity = '0.5';
+                    a.style.cursor = 'not-allowed';
+                    a.querySelector('.lesson-loom-badge').innerHTML = '<i class="fas fa-clock"></i> Coming soon';
+                    a.addEventListener('click', e => e.preventDefault());
+                }
+
+                container.appendChild(a);
+            });
+        }
+
+        // Show the content
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('courseContent').style.display = 'block';
+    }
+
+    function showAccessDenied() {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('accessDenied').style.display = 'block';
+    }
+    </script>
+</body>
+</html>

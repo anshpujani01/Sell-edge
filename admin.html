@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeVault Admin - Course Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <h2>TradeVault</h2>
+                <p>Admin Panel</p>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+                    <i class="fas fa-chart-line"></i><span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-tab="courses" onclick="switchTab('courses')">
+                    <i class="fas fa-book"></i><span>Courses</span>
+                </button>
+                <button class="nav-item" data-tab="payments" onclick="switchTab('payments')">
+                    <i class="fas fa-credit-card"></i><span>Payments</span>
+                </button>
+                <button class="nav-item" data-tab="students" onclick="switchTab('students')">
+                    <i class="fas fa-users"></i><span>Students</span>
+                </button>
+                <button class="nav-item" data-tab="users" onclick="switchTab('users')">
+                    <i class="fas fa-user-circle"></i><span>User Logins</span>
+                </button>
+                <button class="nav-item" data-tab="settings" onclick="switchTab('settings')">
+                    <i class="fas fa-cog"></i><span>Settings</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search...">
+                </div>
+                <div class="top-right">
+                    <span class="welcome-text">Welcome to TradeVault Admin</span>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <section id="dashboard-tab" class="tab-content active">
+                <div class="page-header">
+                    <h1>Dashboard</h1>
+                    <p>Welcome back! Here's your course performance overview.</p>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="stat-content"><h3 id="totalCourses">0</h3><p>Total Courses</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content"><h3 id="totalStudents">0</h3><p>Total Students</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <div class="stat-content"><h3 id="totalRevenue">₹0</h3><p>Total Revenue</p></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content"><h3 id="completedPayments">0</h3><p>Completed Sales</p></div>
+                    </div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Recent Enrollments</h3>
+                            <a href="#" onclick="switchTab('students')" class="view-all">View All</a>
+                        </div>
+                        <div class="enrollments-list" id="recentEnrollments">
+                            <p style="text-align:center;padding:20px;color:#999;">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Latest Payments</h3>
+                            <a href="#" onclick="switchTab('payments')" class="view-all">View All</a>
+                        </div>
+                        <div class="payments-list" id="recentPayments">
+                            <p style="text-align:center;padding:20px;color:#999;">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Courses Tab -->
+            <section id="courses-tab" class="tab-content">
+                <div class="page-header with-button">
+                    <div>
+                        <h1>Courses</h1>
+                        <p>Create and manage your trading courses</p>
+                    </div>
+                    <button class="btn-primary" onclick="openCourseModal()">
+                        <i class="fas fa-plus"></i> New Course
+                    </button>
+                </div>
+                <div class="courses-container" id="coursesContainer">
+                    <div class="empty-state">
+                        <i class="fas fa-book"></i>
+                        <h3>No courses yet</h3>
+                        <p>Create your first course to get started</p>
+                        <button class="btn-primary" onclick="openCourseModal()">Create Course</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Payments Tab -->
+            <section id="payments-tab" class="tab-content">
+                <div class="page-header">
+                    <h1>Payments</h1>
+                    <p>Track all student payments and transactions</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Payment Transactions</h3>
+                        <select id="paymentFilter" class="filter-select" onchange="loadPayments()">
+                            <option value="">All Statuses</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Failed">Failed</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Course</th>
+                                    <th>Amount</th>
+                                    <th>Discount</th>
+                                    <th>Final Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentsTable">
+                                <tr><td colspan="8" style="text-align:center;padding:40px;color:#999;">No payments yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Students Tab -->
+            <section id="students-tab" class="tab-content">
+                <div class="page-header">
+                    <h1>Students</h1>
+                    <p>Manage enrolled students and their progress</p>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>Student List</h3></div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Courses Enrolled</th>
+                                    <th>Enrollment Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTable">
+                                <tr><td colspan="6" style="text-align:center;padding:40px;color:#999;">No students yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- User Logins Tab -->
+            <section id="users-tab" class="tab-content">
+                <div class="page-header">
+                    <h1>User Logins</h1>
+                    <p>All registered users and their login activity</p>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Registered Users</h3>
+                        <span id="userCount" style="font-size:13px;color:#888;">Loading...</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Registered On</th>
+                                    <th>Last Login</th>
+                                    <th>Courses</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTable">
+                                <tr><td colspan="7" style="text-align:center;padding:40px;color:#999;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Tab -->
+            <section id="settings-tab" class="tab-content">
+                <div class="page-header">
+                    <h1>Settings</h1>
+                    <p>Manage your website content and demo video</p>
+                </div>
+                <div class="card" style="max-width:620px;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-video" style="color:#625df5;margin-right:8px;"></i>Demo Video</h3>
+                    </div>
+                    <div style="padding:24px;">
+                        <p style="color:#888;font-size:14px;margin-bottom:20px;">
+                            Upload a demo video to Firebase Storage. It will be shown on the public <strong>Watch Demo</strong> page.
+                        </p>
+                        <div class="form-group">
+                            <label>Upload Demo Video</label>
+                            <div class="file-upload" id="demoVideoUploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click to upload demo video</p>
+                                <small>MP4, WebM — max 500MB</small>
+                                <input type="file" id="demoVideoFile" accept="video/*" onchange="handleDemoVideoSelect(this)">
+                            </div>
+                            <div id="demoVideoInfo" style="display:none;margin-top:10px;padding:10px 14px;background:#f0eeff;border-radius:6px;font-size:13px;color:#444;">
+                                <i class="fas fa-file-video" style="color:#625df5;margin-right:6px;"></i>
+                                <span id="demoVideoName"></span>
+                            </div>
+                        </div>
+                        <div id="demoUploadProgress" style="display:none;margin-top:12px;">
+                            <div style="background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden;">
+                                <div id="demoProgressBar" style="height:100%;background:linear-gradient(90deg,#625df5,#a78bfa);width:0%;transition:width 0.3s;"></div>
+                            </div>
+                            <p id="demoProgressText" style="font-size:12px;color:#888;margin-top:6px;"></p>
+                        </div>
+                        <button class="btn-primary" onclick="saveDemoVideo()" style="margin-top:16px;">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload & Save
+                        </button>
+                        <div id="demoSaveStatus" style="display:none;margin-top:14px;padding:10px 14px;border-radius:6px;font-size:13px;"></div>
+                        <!-- Current demo video -->
+                        <div id="currentDemoSection" style="display:none;margin-top:24px;border-top:1px solid #eee;padding-top:20px;">
+                            <p style="font-size:13px;color:#666;margin-bottom:10px;"><strong>Current Demo Video:</strong></p>
+                            <video id="currentDemoPreview" controls style="width:100%;border-radius:8px;max-height:200px;" controlsList="nodownload" disablePictureInPicture></video>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Course Modal -->
+    <div id="courseModal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="courseModalTitle">Create New Course</h2>
+                <button class="modal-close" onclick="closeCourseModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="courseForm" onsubmit="handleCourseSubmit(event)">
+                <div class="modal-body">
+                    <div class="form-section">
+                        <h3>Course Information</h3>
+                        <div class="form-group">
+                            <label>Course Title *</label>
+                            <input type="text" id="courseTitle" placeholder="e.g., Stock Market Fundamentals" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description *</label>
+                            <textarea id="courseDescription" placeholder="Describe what students will learn..." required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Level *</label>
+                                <select id="courseLevel" required>
+                                    <option value="">Select Level</option>
+                                    <option value="Beginner">Beginner</option>
+                                    <option value="Intermediate">Intermediate</option>
+                                    <option value="Advanced">Advanced</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Price (₹) *</label>
+                                <input type="number" id="coursePrice" placeholder="4999" min="0" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Duration</label>
+                                <input type="text" id="courseDuration" placeholder="e.g., 6 weeks">
+                            </div>
+                            <div class="form-group">
+                                <label>Number of Lessons</label>
+                                <input type="number" id="courseLessons" placeholder="12" min="0">
+                            </div>
+                        </div>
+                        <div class="form-group checkbox">
+                            <input type="checkbox" id="courseFeatured">
+                            <label>Featured Course (shows on homepage)</label>
+                        </div>
+                    </div>
+
+                    <div id="courseContentSection" class="form-section hidden">
+                        <h3>Course Content</h3>
+                        <p class="section-info">Add video lessons for this course</p>
+                        <button type="button" class="btn-secondary" onclick="openLessonModal()">
+                            <i class="fas fa-plus"></i> Add Lesson
+                        </button>
+                        <div id="lessonsContainer" style="margin-top:20px;"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeCourseModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lesson Modal -->
+    <div id="lessonModal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>Add Lesson</h2>
+                <button class="modal-close" onclick="closeLessonModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="lessonForm" onsubmit="handleLessonSubmit(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Lesson Number *</label>
+                        <input type="number" id="lessonNumber" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Lesson Title *</label>
+                        <input type="text" id="lessonTitle" placeholder="e.g., Introduction to Stock Market" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="lessonDescription" placeholder="What will students learn in this lesson?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration</label>
+                        <input type="text" id="lessonDuration" placeholder="e.g., 45 minutes">
+                    </div>
+                    <div class="form-group">
+                        <label>Lesson Video *</label>
+                        <div class="file-upload" id="lessonVideoUploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click to upload lesson video</p>
+                            <small>MP4, WebM — max 2GB</small>
+                            <input type="file" id="lessonVideoFile" accept="video/*" onchange="handleLessonVideoSelect(this)">
+                        </div>
+                        <div id="lessonVideoInfo" style="display:none;margin-top:10px;padding:10px 14px;background:#f0eeff;border-radius:6px;font-size:13px;color:#444;">
+                            <i class="fas fa-file-video" style="color:#625df5;margin-right:6px;"></i>
+                            <span id="lessonVideoName"></span>
+                        </div>
+                        <div id="lessonUploadProgress" style="display:none;margin-top:12px;">
+                            <div style="background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden;">
+                                <div id="lessonProgressBar" style="height:100%;background:linear-gradient(90deg,#625df5,#a78bfa);width:0%;transition:width 0.3s;"></div>
+                            </div>
+                            <p id="lessonProgressText" style="font-size:12px;color:#888;margin-top:6px;"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeLessonModal()">Cancel</button>
+                    <button type="submit" class="btn-primary" id="lessonSubmitBtn">Upload & Add Lesson</button>
+                    </div>
+            </form>
+        </div>
+    </div>
+ 
+    <!-- Payment Status Modal -->
+    <div id="paymentModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Update Payment Status</h2>
+                <button class="modal-close" onclick="closePaymentModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="paymentForm" onsubmit="handlePaymentUpdate(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>New Status *</label>
+                        <select id="paymentStatus" required>
+                            <option value="Pending">Pending</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Failed">Failed</option>
+                            <option value="Refunded">Refunded</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closePaymentModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+ 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="admin.js"></script>
+</body>
