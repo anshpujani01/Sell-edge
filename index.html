@@ -452,7 +452,7 @@
 <!-- ═══ LEFT PANEL ═══ -->
 <div class="left-panel">
     <div class="brand">
-        <a href="index.html" class="brand-name">TradeVault</a>
+        <a href="main.html" class="brand-name">TradeVault</a>
     </div>
 
     <div class="chart-art">
@@ -675,7 +675,7 @@ let mode = 'login'; // 'login' | 'signup'
 // If already logged in, redirect to home
 auth.onAuthStateChanged(user => {
     if (user) {
-        const redirect = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
+        const redirect = new URLSearchParams(window.location.search).get('redirect') || 'main.html';
         window.location.href = redirect;
     }
 });
