@@ -782,3 +782,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // Defer auth init until Firebase is ready
     setTimeout(initAuthState, 500);
 });
+// script.js - Admin button controller
+// Assumes Firebase is already initialized and `firebase.auth()` is available
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Create the button element (or you can select an existing one)
+  const adminButton = document.createElement('button');
+  adminButton.id = 'adminRedirectBtn';
+  adminButton.textContent = '⚙️ Go to Admin Console';
+  adminButton.style.cssText = `
+    background: #1e4a6b;
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 40px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    display: none;
+    margin: 1rem auto;
+  `;
+  // Append to body or a specific container (change selector as needed)
+  document.body.appendChild(adminButton);
+
+  // Listen to auth state changes
+  firebase.auth().onAuthStateChanged(user => {
+    if (user && user.email === 'selledge@gmail.com') {
+      adminButton.style.display = 'block';
+    } else {
+      adminButton.style.display = 'none';
+    }
+  });
+
+  // Redirect to admin.html on click
+  adminButton.addEventListener('click', () => {
+    window.location.href = 'admin.html';
+  });
+});
